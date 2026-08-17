@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Food Order</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+
+<body class="bg-gray-100">
+
+<!-- 🔴 HEADER -->
+<header class="bg-white shadow-md sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
+    <h1 class="text-2xl font-bold text-[#E23744]">Foodie</h1>
+    <input type="text" placeholder="Search food..."
+      class="border rounded-lg px-4 py-2 w-1/3"/>
+  </div>
+</header>
+
+<!-- 🍽 FOOD GRID -->
+<section class="max-w-7xl mx-auto p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="foodContainer"></section>
+
+
+<!-- 🟡 MODAL -->
+<div id="foodModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center">
+
+  <div class="bg-white rounded-2xl w-96 p-6">
+
+    <img id="modalImage" class="rounded-xl mb-4">
+
+    <h2 id="modalName" class="text-xl font-bold mb-2"></h2>
+
+    <p id="modalPrice"></p>
+    <p id="modalGST"></p>
+
+    <button onclick="showOrderForm()"
+      class="bg-[#E23744] text-white w-full py-2 mt-4 rounded-lg hover:scale-105 transition">
+      Place Order
+    </button>
+
+    <button onclick="closeModal()" class="mt-3 text-gray-500">Cancel</button>
+  </div>
+</div>
+
+
+<!-- 🧾 ORDER FORM -->
+<div id="orderForm" class="hidden max-w-md mx-auto bg-white p-6 mt-10 rounded-xl shadow">
+
+  <h2 class="text-xl font-bold mb-4">Enter Details</h2>
+
+  <input id="name" placeholder="Name" class="input"/>
+  <input id="phone" placeholder="Phone" class="input"/>
+  <input id="email" placeholder="Email" class="input"/>
+  <textarea id="address" placeholder="Address" class="input"></textarea>
+
+  <button onclick="placeOrder()" class="btn">Submit Order</button>
+
+</div>
+
+
+<!-- ⭐ REVIEW -->
+<div id="reviewSection" class="hidden max-w-md mx-auto bg-white p-6 mt-10 rounded-xl shadow">
+
+  <h2 class="text-xl font-bold mb-4">Give Review</h2>
+
+  <div id="stars" class="flex text-2xl cursor-pointer mb-4">
+    <span onclick="rate(1)">⭐</span>
+    <span onclick="rate(2)">⭐</span>
+    <span onclick="rate(3)">⭐</span>
+    <span onclick="rate(4)">⭐</span>
+    <span onclick="rate(5)">⭐</span>
+  </div>
+
+  <textarea id="reviewText" placeholder="Write review..." class="input"></textarea>
+
+  <button onclick="submitReview()" class="btn">Submit Review</button>
+
+</div>
+
+
+<script>
+
+let selectedFood
+let rating = 0
+
+// 🍽 LOAD FOODS
+fetch("/api/foods")
+.then(res => res.json())
+.then(data => {
+
+  const container = document.getElementById("foodContainer")
+
+  data.forEach(food => {
+
+    container.innerHTML += `
+      <div onclick='openModal(${JSON.stringify(food)})'
+        class="bg-white rounded-xl shadow hover:shadow-xl transition cursor-pointer">
+
+        <img src="${food.image}" class="rounded-t-xl h-40 w-full object-cover">
+
+        <div class="p-4">
+          <h2 class="font-bold">${food.name}</h2>
+          <p class="text-gray-500">₹${food.price}</p>
+        </div>
+      </div>
+    `
+  })
+
+})
+
+
+// 🟡 MODAL
+function openModal(food){
+  selectedFood = food
+
+  modalImage.src = food.image
+  modalName.innerText = food.name
+
+  let gst = food.price * 0.05
+
+  modalPrice.innerText = "Price: ₹" + food.price
+  modalGST.innerText = "GST: ₹" + gst.toFixed(2)
+
+  foodModal.classList.remove("hidden")
+  foodModal.classList.add("flex")
+}
+
+function closeModal(){
+  foodModal.classList.add("hidden")
+}
+
+
+// 🧾 SHOW ORDER FORM
+function showOrderForm(){
+  foodModal.classList.add("hidden")
+  orderForm.classList.remove("hidden")
+}
+
+
+// 📦 PLACE ORDER
+function placeOrder(){
+
+fetch("/api/order",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    food_name:selectedFood.name,
+    name:name.value,
+    phone:phone.value,
+    email:email.value,
+    address:address.value
+  })
+})
+.then(()=>{
+
+  orderForm.classList.add("hidden")
+  reviewSection.classList.remove("hidden")
+
+})
+
+}
+
+
+// ⭐ STAR RATING
+function rate(n){
+  rating = n
+}
+
+
+// 📝 SUBMIT REVIEW
+function submitReview(){
+
+fetch("/api/review",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    food_name:selectedFood.name,
+    rating,
+    review:reviewText.value
+  })
+})
+.then(()=>{
+
+  alert("Thanks for your feedback ❤️")
+  location.reload()
+
+})
+
+}
+
+</script>
+
+
+<style>
+
+.input{
+  width:100%;
+  border:1px solid #ddd;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:8px;
+}
+
+.btn{
+  background:#E23744;
+  color:white;
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+}
+
+</style>
+
+</body>
+</html>
