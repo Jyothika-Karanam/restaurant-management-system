@@ -11,8 +11,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 
 client = MongoClient(MONGO_URI)
 
-db = client["restaurant"]
-foods = db["foods"]
+db = client["restaurant_db"]
 
 foods = db["foods"]
 orders = db["orders"]
