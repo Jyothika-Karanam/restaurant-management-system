@@ -36,25 +36,32 @@ orders = db["orders"]
 reviews = db["reviews"]
 users = db["users"]
 
+
 # ================= ADMIN CONFIG =================
-ADMIN_EMAIL = "23091a3255@rgmcet.edu.in.com"   # 🔴 change this
-ADMIN_PASSWORD = "jyovirat18"                # 🔴 change this
+ADMIN_EMAIL = "23091a3255@rgmcet.edu.in.com"
+ADMIN_PASSWORD = "CHANGE_THIS_PASSWORD"
 
 
 # ---------------- FOOD ----------------
-def get_user_orders(email):
-    return list(orders.find({"email": email}))
 def get_all_foods():
     return list(foods.find())
 
 
+# ---------------- ORDER ----------------
 def insert_order(data):
     data["date"] = datetime.now().date().isoformat()
-    return orders.insert_one(data).inserted_id
+
+    result = orders.insert_one(data)
+
+    if result.acknowledged:
+        print(f"✅ Order stored successfully: {result.inserted_id}")
+        return result.inserted_id
+
+    raise RuntimeError("Order insertion was not acknowledged by MongoDB")
 
 
-def insert_review(data):
-    return reviews.insert_one(data)
+def get_user_orders(email):
+    return list(orders.find({"user_email": email}))
 
 
 def get_orders_today():
@@ -66,10 +73,22 @@ def get_all_orders():
     return list(orders.find())
 
 
+# ---------------- REVIEW ----------------
+def insert_review(data):
+    result = reviews.insert_one(data)
+
+    if result.acknowledged:
+        print(f"✅ Review stored successfully: {result.inserted_id}")
+        return result
+
+    raise RuntimeError("Review insertion was not acknowledged by MongoDB")
+
+
 def get_all_reviews():
     return list(reviews.find())
 
 
+# ---------------- AUTH ----------------
 def get_user(email):
     return users.find_one({"email": email})
 
@@ -102,6 +121,7 @@ def get_user_role(email):
     return "customer"
 
 
+# ---------------- FAVORITES ----------------
 def add_favorite(email, food_id):
     return users.update_one(
         {"email": email},
