@@ -3,13 +3,22 @@ from datetime import datetime
 from bson import ObjectId
 import os
 from dotenv import load_dotenv
-from pymongo import MongoClient
+import streamlit as st
 
 load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI")
 
-client = MongoClient(MONGO_URI)
+if not MONGO_URI:
+    try:
+        MONGO_URI = st.secrets["MONGO_URI"]
+    except Exception:
+        raise RuntimeError("MONGO_URI is not configured.")
+
+client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=10000)
+
+# Test connection
+client.admin.command("ping")
 
 db = client["restaurant_db"]
 
@@ -17,7 +26,6 @@ foods = db["foods"]
 orders = db["orders"]
 reviews = db["reviews"]
 users = db["users"]
-
 
 # ================= ADMIN CONFIG =================
 ADMIN_EMAIL = "youradminemail@gmail.com"   # 🔴 change this
