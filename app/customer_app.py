@@ -259,6 +259,7 @@ elif st.session_state.page == "details":
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------- ORDER FORM ----------------
+# ---------------- ORDER FORM ----------------
 elif st.session_state.page == "order_form":
 
     if st.button("⬅ Back to Details"):
@@ -282,20 +283,29 @@ elif st.session_state.page == "order_form":
 
     if st.button("Submit Order"):
 
-        insert_order({
-            "user_email": st.session_state.user_email,
-            "food_name": st.session_state.food["name"],
-            "price": st.session_state.food["price"],
-            "customer_name": name,
-            "mobile": mobile,
-            "address": address
-        })
+        try:
+            order_data = {
+                "user_email": st.session_state.user_email,
+                "food_name": st.session_state.food["name"],
+                "price": st.session_state.food["price"],
+                "customer_name": name,
+                "mobile": mobile,
+                "address": address
+            }
 
-        st.success("🎉 Thanks for placing the order!")
-        time.sleep(2)
+            order_id = insert_order(order_data)
 
-        st.session_state.page = "review"
-        st.rerun()
+            if order_id:
+                st.success("🎉 Thanks for placing the order!")
+                time.sleep(2)
+
+                st.session_state.page = "review"
+                st.rerun()
+            else:
+                st.error("❌ Order could not be saved to the database.")
+
+        except Exception as e:
+            st.error(f"❌ Order could not be saved: {e}")
 
 # ---------------- REVIEW PAGE ----------------
 elif st.session_state.page == "review":
@@ -322,24 +332,38 @@ elif st.session_state.page == "review":
 
     if st.button("Submit Review"):
 
-        sentiment = get_sentiment(feedback)
+        try:
+            sentiment = get_sentiment(feedback)
 
-        insert_review({
-            "user_email": st.session_state.user_email,
-            "food_name": st.session_state.food["name"],
-            "rating": rating,
-            "feedback": feedback,
-            "sentiment": sentiment
-        })
+            review_data = {
+                "user_email": st.session_state.user_email,
+                "food_name": st.session_state.food["name"],
+                "rating": rating,
+                "feedback": feedback,
+                "sentiment": sentiment
+            }
 
-        if sentiment == "positive":
-            st.success("💖 Thank you for your positive feedback!")
-        else:
-            st.markdown("<div style='background-color:#fff3cd;padding:10px;border-radius:8px;color:#856404;font-weight:600;'>🙏 Thank you! We will improve based on your feedback.</div>", unsafe_allow_html=True)
+            review_result = insert_review(review_data)
 
-        time.sleep(2)
-        st.session_state.page = "home"
-        st.rerun()
+            if review_result and review_result.inserted_id:
+
+                if sentiment == "positive":
+                    st.success("💖 Thank you for your positive feedback!")
+                else:
+                    st.markdown(
+                        "<div style='background-color:#fff3cd;padding:10px;border-radius:8px;color:#856404;font-weight:600;'>🙏 Thank you! We will improve based on your feedback.</div>",
+                        unsafe_allow_html=True
+                    )
+
+                time.sleep(2)
+                st.session_state.page = "home"
+                st.rerun()
+
+            else:
+                st.error("❌ Review could not be saved to the database.")
+
+        except Exception as e:
+            st.error(f"❌ Review could not be saved: {e}")
 
 # ---------------- PROFILE ----------------
 elif st.session_state.page == "profile":
