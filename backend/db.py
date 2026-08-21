@@ -58,6 +58,7 @@ def insert_order(data):
 
     return result.inserted_id
 
+
 def get_user_orders(email):
     return list(orders.find({"user_email": email}))
 
@@ -79,6 +80,10 @@ def insert_review(data):
     print("REVIEW COUNT:", reviews.count_documents({}))
 
     return result
+
+
+def get_all_reviews():
+    return list(reviews.find())
 
 
 # ---------------- AUTH ----------------
