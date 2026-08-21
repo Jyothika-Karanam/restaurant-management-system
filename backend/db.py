@@ -53,12 +53,10 @@ def insert_order(data):
 
     result = orders.insert_one(data)
 
-    if result.acknowledged:
-        print(f"✅ Order stored successfully: {result.inserted_id}")
-        return result.inserted_id
+    print("ORDER INSERT ID:", result.inserted_id)
+    print("ORDER COUNT:", orders.count_documents({}))
 
-    raise RuntimeError("Order insertion was not acknowledged by MongoDB")
-
+    return result.inserted_id
 
 def get_user_orders(email):
     return list(orders.find({"user_email": email}))
@@ -77,15 +75,10 @@ def get_all_orders():
 def insert_review(data):
     result = reviews.insert_one(data)
 
-    if result.acknowledged:
-        print(f"✅ Review stored successfully: {result.inserted_id}")
-        return result
+    print("REVIEW INSERT ID:", result.inserted_id)
+    print("REVIEW COUNT:", reviews.count_documents({}))
 
-    raise RuntimeError("Review insertion was not acknowledged by MongoDB")
-
-
-def get_all_reviews():
-    return list(reviews.find())
+    return result
 
 
 # ---------------- AUTH ----------------
